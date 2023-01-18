@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 5000;
-const dotenv = require('dotenv').config();
+require('dotenv').config();
 const cors = require('cors');
 const {MongoClient} = require('mongodb');
 
@@ -17,6 +17,15 @@ async function main () {
     try{
         const TechCity = client.db(`tech-city`);
         const categories = TechCity.collection(`product-categories`);
+
+        app.get(`/`,(req,res)=>{            
+            return res.send('Welcome Tech-City APIs')
+        });
+
+        app.get(`/categories`,async(req,res)=>{
+            const result = await categories.find({}).toArray();
+            return res.send(result)
+        });
     }
     catch(e){
         console.log(e.message)
