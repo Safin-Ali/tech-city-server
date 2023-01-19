@@ -17,6 +17,7 @@ async function main () {
     try{
         const TechCity = client.db(`tech-city`);
         const categories = TechCity.collection(`product-categories`);
+        const additionalImages = TechCity.collection(`additional-images`);
 
         app.get(`/`,(req,res)=>{            
             return res.send('Welcome Tech-City APIs')
@@ -24,6 +25,11 @@ async function main () {
 
         app.get(`/categories`,async(req,res)=>{
             const result = await categories.find({}).toArray();
+            return res.send(result)
+        });
+
+        app.get(`/additionalImgs`,async(req,res)=>{
+            const result = await additionalImages.findOne({});
             return res.send(result)
         });
     }
