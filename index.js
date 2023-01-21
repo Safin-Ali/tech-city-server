@@ -16,8 +16,9 @@ const client = new MongoClient(uri);
 async function main () {
     try{
         const TechCity = client.db(`tech-city`);
-        const categories = TechCity.collection(`product-categories`);
-        const additionalImages = TechCity.collection(`additional-images`);
+        const categories = TechCity.collection(`productCategories`);
+        const additionalImages = TechCity.collection(`additionalImages`);
+        const productBrands = TechCity.collection(`productBrands`);
 
         app.get(`/`,(req,res)=>{            
             return res.send('Welcome Tech-City APIs')
@@ -30,6 +31,11 @@ async function main () {
 
         app.get(`/additionalImgs`,async(req,res)=>{
             const result = await additionalImages.findOne({});
+            return res.send(result)
+        });
+
+        app.get(`/productBrands`,async(req,res)=>{
+            const result = await productBrands.find({}).toArray();
             return res.send(result)
         });
     }
