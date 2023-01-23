@@ -19,6 +19,7 @@ async function main () {
         const categories = TechCity.collection(`productCategories`);
         const additionalImages = TechCity.collection(`additionalImages`);
         const productBrands = TechCity.collection(`productBrands`);
+        const categoryFeildSchema = TechCity.collection(`categoryFeildSchema`);
 
         app.get(`/`,(req,res)=>{            
             return res.send('Welcome Tech-City APIs')
@@ -36,6 +37,13 @@ async function main () {
 
         app.get(`/productBrands`,async(req,res)=>{
             const result = await productBrands.find({}).toArray();
+            return res.send(result)
+        });
+
+        app.get(`/caregorySchema/:device`,async(req,res)=>{
+            const device = req.params.device;
+            const result = await categoryFeildSchema.findOne({device:device});
+            if(!result) return res.send([]);
             return res.send(result)
         });
     }
