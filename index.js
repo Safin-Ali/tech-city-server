@@ -20,6 +20,7 @@ async function main () {
         const additionalImages = TechCity.collection(`additionalImages`);
         const productBrands = TechCity.collection(`productBrands`);
         const categoryFeildSchema = TechCity.collection(`categoryFeildSchema`);
+        const allProducts = TechCity.collection(`AllProducts`);
 
         app.get(`/`,(req,res)=>{
             return res.send('Welcome Tech-City APIs')
@@ -45,11 +46,35 @@ async function main () {
             const result = await categoryFeildSchema.findOne({device:device});
             return res.send(result)
         });
+
+        // get product by deviceName
+        app.get(`/products/:device`,async(req,res)=>{
+            const device = req.params.device;
+            const regexDevice = new RegExp(device,'i')
+            const products = await allProducts.find({device:device}).toArray();
+            const relatedBrands = await productBrands.find({product:{$in:[regexDevice]}}).toArray();
+            return res.send({relatedBrands,products})
+        });
+
+        // post product
+        app.post(`/allProducts`,async(req,res)=>{
+            const data = req.body;
+            // checking item exist or not
+            const filter = {
+                "others.model":  data.others.model,
+                device: data.device,
+                brand: data.brand
+            };
+            const checkExist = await allProducts.countDocuments(filter) > 0;
+            if(checkExist) return res.send('exist');
+            const result = await allProducts.insertOne(data);
+            return res.send(result)
+        });
     }
     catch(e){
         console.log(e.message)
     }
-}
+};
 
 
 main(); // call databage
