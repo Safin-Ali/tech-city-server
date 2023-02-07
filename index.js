@@ -23,9 +23,9 @@ async function main() {
         const categoryFeildSchema = TechCity.collection(`categoryFeildSchema`);
         const allProducts = TechCity.collection(`AllProducts`);
 
-        // commin function
+        // common function
 
-        // 01. provide others brands by device name
+        // 01. return others brands by device name
         const othersBrand = async (brandName, deviceName) => {
             const query = { brandName: { $ne: brandName }, product: { $in: [deviceName] } };
             const result = await productBrands.find(query).toArray();
@@ -60,22 +60,30 @@ async function main() {
         // get product by deviceName
         app.get(`/products/:device`, async (req, res) => {
             const device = req.params.device;
-            const products = await allProducts.find({ device: device, activity: {$ne:'upcoming'} }).toArray();
+
+            const products = await allProducts.find({ device: device, activity: { $ne: 'upcoming' } }).toArray();
+
+            const upComingProducts = await allProducts.find({ device: device, activity: 'upcoming' }).toArray();
+
             const relatedBrands = await productBrands.find({ product: { $in: [device] } }).toArray();
-            return res.send({ relatedBrands, products });
+
+            return res.send({ relatedBrands, products, upComingProducts });
         });
 
         // get product by brand and device name
         app.get(`/products/:brand/:device`, async (req, res) => {
             const reqParams = req.params;
 
-            const filter = { device: reqParams.device, brand: reqParams.brand, activity: {$ne:'upcoming'} };
+            const filter = { device: reqParams.device, brand: reqParams.brand, activity: { $ne: 'upcoming' } };
+
+            const upComingfilter = { device: reqParams.device, brand: reqParams.brand, activity: 'upcoming' };
 
             const products = await allProducts.find(filter).toArray();
+            const upComingProducts = await allProducts.find(upComingfilter).toArray();
 
             const relatedBrands = await othersBrand(reqParams.brand, reqParams.device);
 
-            return res.send({ relatedBrands, products });
+            return res.send({ relatedBrands, products, upComingProducts });
 
         });
 
