@@ -60,7 +60,7 @@ async function main() {
         // get product by deviceName
         app.get(`/products/:device`, async (req, res) => {
             const device = req.params.device;
-            const products = await allProducts.find({ device: device }).toArray();
+            const products = await allProducts.find({ device: device, activity: {$ne:'upcoming'} }).toArray();
             const relatedBrands = await productBrands.find({ product: { $in: [device] } }).toArray();
             return res.send({ relatedBrands, products });
         });
@@ -69,7 +69,7 @@ async function main() {
         app.get(`/products/:brand/:device`, async (req, res) => {
             const reqParams = req.params;
 
-            const filter = { device: reqParams.device, brand: reqParams.brand };
+            const filter = { device: reqParams.device, brand: reqParams.brand, activity: {$ne:'upcoming'} };
 
             const products = await allProducts.find(filter).toArray();
 
