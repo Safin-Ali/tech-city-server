@@ -3,7 +3,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 require('dotenv').config();
 const cors = require('cors');
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 const { default: axios } = require('axios');
 
 // middleware
@@ -21,6 +21,7 @@ async function main() {
         const additionalImages = TechCity.collection(`additionalImages`);
         const productBrands = TechCity.collection(`productBrands`);
         const categoryFeildSchema = TechCity.collection(`categoryFeildSchema`);
+        const servicesData = TechCity.collection(`servicesData`);
         const allProducts = TechCity.collection(`AllProducts`);
 
         // common function
@@ -32,25 +33,36 @@ async function main() {
             return result;
         };
 
+        // test root
         app.get(`/`, (req, res) => {
             return res.send('Welcome Tech-City APIs')
         });
 
+        // get category device name
         app.get(`/categories`, async (req, res) => {
             const result = await categories.find({}).toArray();
             return res.send(result)
         });
 
+        // get all additional vector images url
         app.get(`/additionalImgs`, async (req, res) => {
             const result = await additionalImages.findOne({});
             return res.send(result)
         });
 
+        // get products Data
         app.get(`/productBrands`, async (req, res) => {
             const result = await productBrands.find({}).toArray();
             return res.send(result)
         });
 
+        // get services Data
+        app.get(`/servicesData`, async (req, res) => {
+            const result = await servicesData.find({}).toArray();
+            return res.send(result)
+        });
+
+        // get development feild schema model Data
         app.get(`/caregorySchema/:device`, async (req, res) => {
             const device = req.params.device;
             const result = await categoryFeildSchema.findOne({ device: device });
@@ -68,6 +80,15 @@ async function main() {
             const relatedBrands = await productBrands.find({ product: { $in: [device] } }).toArray();
 
             return res.send({ relatedBrands, products, upComingProducts });
+        });
+
+        // get product by _ID
+        app.get(`/product/:id`, async (req, res) => {
+            const prodId = req.params.id;
+
+            const product = await allProducts.findOne({_id: ObjectId(prodId)});
+
+            return res.send(product);
         });
 
         // get product by brand and device name
