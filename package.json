@@ -12,7 +12,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "app": "nodemon index.js"
+    "app": "clear && nodemon index.js",
+    "deploy": "vercel --prod && clear"
   },
   "repository": {
     "type": "git",
