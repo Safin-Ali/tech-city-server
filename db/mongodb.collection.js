@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { MongoClient, ObjectId } = require('mongodb');
+const { MongoClient } = require('mongodb');
 
 // connect mongoDB
 const uri = `mongodb+srv://${process.env.mongoDBUser}:${process.env.mongoDBPass}@cluster01.rhyj5nw.mongodb.net/test`;
@@ -11,6 +11,7 @@ const productBrands =(`productBrands`);
 const categoryFeildSchema =(`categoryFeildSchema`);
 const servicesData =(`servicesData`);
 const allProducts =(`AllProducts`);
+const filterOption =(`filterOptions`);
 
 async function getCollection (collectionName) {
     try{
@@ -30,5 +31,6 @@ module.exports = {
     categoryFeildSchema,
     servicesData,
     allProducts,
-    getCollection
+    getCollection,
+    filterOption
 }

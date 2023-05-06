@@ -2,8 +2,10 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 5000;
 const cors = require('cors');
-const {productRoute} = require('./routes/product.data');
-const { categories, getCollection, servicesData, additionalImages } = require('./db/mongodb.collection');
+require('dotenv').config()
+const productRoutes = require('./routes/product.data');
+const { categories, getCollection, servicesData, additionalImages, filterOption } = require('./db/mongodb.collection');
+const stripe = require("stripe")(process.env.stripe_secret_key);
 
 // middleware
 app.use(cors());
@@ -11,7 +13,7 @@ app.use(express.json());
 app.use(express.static('assets'));
 
 // product data fetching router
-app.use(`/api`, productRoute);
+app.use(`/api`, productRoutes);
 
 // test root
 app.get(`/`, (req, res) => {
@@ -37,6 +39,27 @@ app.get(`/api/additionalImgs`, async (req, res) => {
     const collect = await getCollection(additionalImages)
     const result = await collect.findOne({});
     return res.send(result)
+});
+app.get(`/api/filter-options`, async (req, res) => {
+    const collect = await getCollection(filterOption)
+    const result = await collect.findOne({});
+    return res.send(result)
+});
+
+app.post(`/api/payment-intent`, async (req, res) => {
+    const amount = req.body.amount;
+
+    const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount*100,
+        currency: "usd",
+        automatic_payment_methods: {
+            enabled: true,
+        },
+    });
+
+    res.send({
+        clientSecret: paymentIntent.client_secret,
+    });
 });
 
 app.listen(port, () => {

@@ -1,15 +1,25 @@
 const express = require('express');
 const { ObjectId } = require('mongodb');
 const { productBrands, allProducts, getCollection } = require('../db/mongodb.collection');
-const productRoute = express.Router();
+const router = express.Router();
+const {removeWhiteSpace} = require('../utilities/regex-function');
 
-const removeWhiteSpace = (str) => str.replace(/\s+/gi, '');
+const resultShape = {
+    deviceImage: 1,
+    brand: 1,
+    price: 1,
+    others: 1,
+    device: 1,
+    _id: 1,
+    activity: 1,
+    core: 1
+};
 
 // get product related brand
 async function relBrands(device) {
     const collect = await getCollection(productBrands);
-    if(/all/i.test(device)){
-        const relatedBrands = collect.find({ product: {$exists: true} }).toArray();
+    if (/all/i.test(device)) {
+        const relatedBrands = collect.find({ product: { $exists: true } }).toArray();
         return (relatedBrands);
     }
     const relatedBrands = collect.find({ product: { $in: [device] } }).toArray();
@@ -17,14 +27,14 @@ async function relBrands(device) {
 };
 
 // get products Data
-productRoute.get(`/productBrands`, async (req, res) => {
+router.get(`/productBrands`, async (req, res) => {
     const collect = await getCollection(productBrands);
     const result = await collect.find({}).toArray();
     return res.send(result)
 });
 
 // get product
-productRoute.get(`/products`, async (req, res) => {
+router.get(`/products`, async (req, res) => {
 
     const reqQuery = req.query;
 
@@ -43,28 +53,25 @@ productRoute.get(`/products`, async (req, res) => {
 
     const collect = await getCollection(allProducts);
 
-    const { device, brand, activity, discount,search } = reqQuery;
+    const { device, brand, activity, discount, search } = reqQuery;
 
     const filter = {
         $and: [
             { device: device },
             { brand: brand },
-            { activity: activity },
-            { 'price.discount': discount !== 'false' ? { $gt: 0 } :  { $exists: true } },
-            {'others.model': search !== 'null' ? {$regex:new RegExp(search.split('').join('\\s*'), 'i')} : { $exists: true } }
+            { activity: !activity ? { $exists: true } : activity },
+            { 'price.discount': discount !== 'false' ? { $gt: 0 } : { $exists: true } },
+            { 'others.model': search !== 'null' ? { $regex: new RegExp(search.split('').join('\\s*'), 'i') } : { $exists: true } }
         ]
     };
 
-    // res.send(filter)
-
-    const result = await collect.find(filter).toArray();
+    const result = await collect.find(filter, { projection: resultShape }).toArray();
 
     return res.send({ products: result, relatedBrands });
-
 });
 
 // post product
-productRoute.post(`/allProducts`, async (req, res) => {
+router.post(`/allProducts`, async (req, res) => {
     const data = req.body;
 
     const collect = await getCollection(allProducts);
@@ -82,29 +89,39 @@ productRoute.post(`/allProducts`, async (req, res) => {
 });
 
 // get product by _ID
-productRoute.get(`/product/:brand/:device/:id`, async (req, res) => {
+router.get(`/product/:brand/:device/:id`, async (req, res) => {
 
     const collect = await getCollection(allProducts);
 
-    const {id,brand,device} = req.params;
+    const { id, brand, device } = req.params;
 
-    const product = await collect.findOne({ _id: ObjectId(id), brand, device});
+    const returnShape = {
+        _id:0,
+        activity:0,
+        core:0
+    }
+
+    const product = await collect.findOne({
+        _id: new ObjectId(id),
+        brand,
+        device
+    },{projection:returnShape});
 
     return res.send(product);
 });
 
 // get cart products
-productRoute.get(`/cart-products/`, async (req, res) => {
+router.get(`/cart-products/`, async (req, res) => {
 
-    const cartArr = JSON.parse(req.query.productsId).map(item => ObjectId(item))
+    const cartArr = JSON.parse(req.query.productsId).map(item => new ObjectId(item));
 
-    const query = { _id: {$in: cartArr}};
+    const query = { _id: { $in: cartArr } };
 
     const collect = await getCollection(allProducts);
 
-    const product = await collect.find(query).toArray();
+    const product = await collect.find(query, { projection: resultShape }).toArray();
 
     return res.send(product);
 });
 
-module.exports = { productRoute, removeWhiteSpace };
+module.exports = router
